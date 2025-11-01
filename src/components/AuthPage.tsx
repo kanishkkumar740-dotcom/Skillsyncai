@@ -18,9 +18,10 @@ interface AuthPageProps {
   onBack: () => void;
   onSuccess: (userData: any, isNewUser?: boolean) => void;
   onModeSwitch: (mode: 'login' | 'signup') => void;
+  onForgotPassword?: () => void;
 }
 
-export function AuthPage({ mode, onBack, onSuccess, onModeSwitch }: AuthPageProps) {
+export function AuthPage({ mode, onBack, onSuccess, onModeSwitch, onForgotPassword }: AuthPageProps) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -182,6 +183,21 @@ export function AuthPage({ mode, onBack, onSuccess, onModeSwitch }: AuthPageProp
                 </Button>
               </div>
               {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password}</p>}
+              
+              {/* Forgot Password Link - Only show in login mode */}
+              {mode === 'login' && onForgotPassword && (
+                <div className="text-right mt-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={onForgotPassword}
+                    className="text-purple-300 hover:text-purple-200 p-0 h-auto text-xs"
+                  >
+                    Forgot Password?
+                  </Button>
+                </div>
+              )}
             </div>
 
             {mode === 'signup' && (

@@ -32,6 +32,8 @@ import { AdminMonitoringPage } from "./components/AdminMonitoringPage";
 import { OnboardingFlow, type UserPreferences } from "./components/OnboardingFlow";
 import { PersonalizedDashboard } from "./components/PersonalizedDashboard";
 import { CareerPreferencesPage } from "./components/CareerPreferencesPage";
+import { ForgotPasswordPage } from "./components/ForgotPasswordPage";
+import { ResetPasswordPage } from "./components/ResetPasswordPage";
 import { Toaster } from "./components/ui/sonner";
 import { Button } from "./components/ui/button";
 import { Target, ArrowRight } from "lucide-react";
@@ -82,8 +84,9 @@ const suggestedQuestions = [
 ];
 
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState<'home' | 'search' | 'filters' | 'answer' | 'topics' | 'profile' | 'auth' | 'saved' | 'settings' | 'notifications' | 'activity' | 'changePassword' | 'privacy' | 'terms' | 'about' | 'help' | 'community-feedback' | 'adminMonitoring' | 'onboarding' | 'career-preferences'>('home');
+  const [currentScreen, setCurrentScreen] = useState<'home' | 'search' | 'filters' | 'answer' | 'topics' | 'profile' | 'auth' | 'saved' | 'settings' | 'notifications' | 'activity' | 'changePassword' | 'privacy' | 'terms' | 'about' | 'help' | 'community-feedback' | 'adminMonitoring' | 'onboarding' | 'career-preferences' | 'forgot-password' | 'reset-password'>('home');
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [resetEmail, setResetEmail] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<CareerQuestion[]>(allQuestions);
   const [selectedQuestion, setSelectedQuestion] = useState<CareerQuestion>(allQuestions[0]);
@@ -621,6 +624,33 @@ export default function App() {
             onBack={() => setCurrentScreen('home')}
             onSuccess={handleAuthSuccess}
             onModeSwitch={(mode) => setAuthMode(mode)}
+            onForgotPassword={() => setCurrentScreen('forgot-password')}
+          />
+        );
+
+      case 'forgot-password':
+        return (
+          <ForgotPasswordPage
+            onBack={() => {
+              setAuthMode('login');
+              setCurrentScreen('auth');
+            }}
+            onResetLinkSent={(email) => {
+              setResetEmail(email);
+              setCurrentScreen('reset-password');
+            }}
+          />
+        );
+
+      case 'reset-password':
+        return (
+          <ResetPasswordPage
+            email={resetEmail}
+            onBack={() => setCurrentScreen('forgot-password')}
+            onSuccess={() => {
+              setAuthMode('login');
+              setCurrentScreen('auth');
+            }}
           />
         );
 
