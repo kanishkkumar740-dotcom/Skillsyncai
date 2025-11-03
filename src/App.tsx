@@ -218,11 +218,8 @@ export default function App() {
       });
       
       try {
-        // First, search existing questions in the database
-        const existingResults = searchCareerQuestions(query, allQuestions);
-        
-        // If OpenAI is configured, enabled, and no exact matches found, generate AI response
-        if (isOpenAIConfigured() && aiEnabled && existingResults.length === 0) {
+        // If OpenAI is configured and enabled, use AI for personalized responses
+        if (isOpenAIConfigured() && aiEnabled) {
           toast.info('🤖 Generating AI response...', {
             description: 'SKILLSYNC AI is analyzing your question',
             duration: 2000,
@@ -246,16 +243,19 @@ export default function App() {
             description: 'Your personalized career advice is ready',
             duration: 2000,
           });
-        } else if (existingResults.length > 0) {
-          // Use existing database results
-          setSearchResults(existingResults);
         } else {
-          // No OpenAI configured and no matches
-          setSearchResults([]);
-          toast.error('No results found', {
-            description: 'Try rephrasing your question or enable AI responses',
-            duration: 3000,
-          });
+          // Fallback: search existing questions in the database
+          const existingResults = searchCareerQuestions(query, allQuestions);
+          
+          if (existingResults.length > 0) {
+            setSearchResults(existingResults);
+          } else {
+            setSearchResults([]);
+            toast.error('No results found', {
+              description: aiEnabled ? 'Configure OpenAI API key in Settings to get AI responses' : 'Try rephrasing your question or enable AI responses in Settings',
+              duration: 3000,
+            });
+          }
         }
         
         setIsSearching(false);

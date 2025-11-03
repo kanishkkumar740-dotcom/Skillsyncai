@@ -62,20 +62,21 @@ yarn dev
 
 ## 🎯 How It Works
 
-### Intelligent Search Flow
+### AI-First Search Flow
 
-1. **User enters a question** → The app searches existing database first
-2. **No exact match found** → If OpenAI is configured, generates AI response
-3. **AI generates answer** → Uses GPT-3.5-turbo with SKILLSYNC AI system prompt
-4. **Response displayed** → User gets personalized career guidance
+1. **User enters a question** → If AI is enabled and configured, generates AI response
+2. **AI generates answer** → Uses GPT-3.5-turbo with SKILLSYNC AI system prompt
+3. **Response displayed** → User gets personalized career guidance
+4. **Fallback** → If AI is disabled, searches existing database
 
 ### Features
 
-- ✅ **Smart Fallback**: Uses database questions when available, AI for new queries
+- ✅ **AI-First Approach**: Generates fresh, personalized responses for every question when AI is enabled
 - ✅ **Category Detection**: Automatically categorizes questions (Tech, Business, Healthcare, Arts)
-- ✅ **Error Handling**: Graceful fallback with user-friendly error messages
-- ✅ **Cost Efficient**: Only calls OpenAI when needed
+- ✅ **Error Handling**: Graceful fallback to database with user-friendly error messages
+- ✅ **Toggle Control**: Enable/disable AI responses in Settings
 - ✅ **Toast Notifications**: Real-time feedback during AI generation
+- ✅ **Smart Fallback**: Uses database questions if AI is disabled or fails
 
 ## 💰 Pricing & Usage
 

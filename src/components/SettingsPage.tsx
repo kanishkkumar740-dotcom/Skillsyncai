@@ -242,7 +242,7 @@ export function SettingsPage({ onBack, onSignOut, onNavigate }: SettingsPageProp
                 <Separator className="bg-white/10" />
                 <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
                   <p className="text-purple-300 text-xs">
-                    ✨ <strong>AI Mode Active:</strong> SKILLSYNC AI will generate personalized responses using OpenAI GPT-3.5 when no database matches are found.
+                    ✨ <strong>AI Mode Active:</strong> SKILLSYNC AI will generate personalized responses using OpenAI GPT-3.5 for all your questions.
                   </p>
                 </div>
               </>
