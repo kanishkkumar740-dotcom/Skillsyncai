@@ -1,4 +1,4 @@
-import { ArrowLeft, Moon, Bell, Lock, Globe, HelpCircle, Info, Trash2, LogOut, Shield } from "lucide-react";
+import { ArrowLeft, Moon, Bell, Lock, Globe, HelpCircle, Info, Trash2, LogOut, Shield, Sparkles } from "lucide-react";
 import { Button } from "./ui/button";
 import { Switch } from "./ui/switch";
 import { Card } from "./ui/card";
@@ -6,6 +6,7 @@ import { Separator } from "./ui/separator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./ui/alert-dialog";
 import { useState, useEffect } from "react";
 import { toast } from "sonner@2.0.3";
+import { isOpenAIConfigured } from "../utils/openai";
 
 interface SettingsPageProps {
   onBack: () => void;
@@ -20,7 +21,10 @@ export function SettingsPage({ onBack, onSignOut, onNavigate }: SettingsPageProp
     emailNotifications: true,
     pushNotifications: false,
     soundEffects: true,
+    aiResponses: true,
   });
+
+  const aiConfigured = isOpenAIConfigured();
 
   // Load settings from localStorage
   useEffect(() => {
@@ -182,6 +186,67 @@ export function SettingsPage({ onBack, onSignOut, onNavigate }: SettingsPageProp
             >
               Terms of Service
             </Button>
+          </div>
+        </Card>
+
+        {/* AI Features */}
+        <Card className={`p-4 backdrop-blur-sm ${aiConfigured ? 'bg-gradient-to-br from-purple-500/10 to-indigo-500/10 border-purple-500/30' : 'bg-white/5 border-white/10'}`}>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-lg ${aiConfigured ? 'bg-purple-500/20' : 'bg-gray-500/20'}`}>
+                <Sparkles className={`w-4 h-4 ${aiConfigured ? 'text-purple-300' : 'text-gray-400'}`} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className={`text-sm ${aiConfigured ? 'text-purple-300' : 'text-white'}`}>AI Features</h3>
+                  {aiConfigured ? (
+                    <span className="px-2 py-0.5 bg-green-500/20 text-green-300 rounded text-xs">Active</span>
+                  ) : (
+                    <span className="px-2 py-0.5 bg-gray-500/20 text-gray-400 rounded text-xs">Not Configured</span>
+                  )}
+                </div>
+                <p className={`text-xs ${aiConfigured ? 'text-purple-200/70' : 'text-white/60'}`}>
+                  {aiConfigured ? 'OpenAI integration enabled' : 'Configure OpenAI API key'}
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <span className="text-white/80 text-sm">AI-Generated Responses</span>
+                <p className="text-white/50 text-xs mt-0.5">Use OpenAI for new questions</p>
+              </div>
+              <Switch
+                checked={settings.aiResponses && aiConfigured}
+                onCheckedChange={() => handleToggle('aiResponses')}
+                disabled={!aiConfigured}
+              />
+            </div>
+            
+            {!aiConfigured && (
+              <>
+                <Separator className="bg-white/10" />
+                <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                  <p className="text-yellow-300 text-xs">
+                    ⚙️ <strong>Setup Required:</strong> Add VITE_OPENAI_API_KEY to your .env.local file. 
+                    See OPENAI_SETUP.md for instructions.
+                  </p>
+                </div>
+              </>
+            )}
+            
+            {aiConfigured && (
+              <>
+                <Separator className="bg-white/10" />
+                <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                  <p className="text-purple-300 text-xs">
+                    ✨ <strong>AI Mode Active:</strong> SKILLSYNC AI will generate personalized responses using OpenAI GPT-3.5 when no database matches are found.
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         </Card>
 

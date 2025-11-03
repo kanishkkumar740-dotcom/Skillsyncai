@@ -38,6 +38,8 @@ import { Toaster } from "./components/ui/sonner";
 import { Button } from "./components/ui/button";
 import { Target, ArrowRight } from "lucide-react";
 import { searchCareerQuestions, type CareerQuestion, extendedSampleQuestions } from "./services/aiCareerAdvisor";
+import { generateCareerAdvice, isOpenAIConfigured, getErrorMessage } from "./utils/openai";
+import { toast } from "sonner@2.0.3";
 
 // Sample data for the app - now using extended questions
 const sampleQuestions: CareerQuestion[] = [
@@ -109,6 +111,7 @@ export default function App() {
   const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
   const [recentSearches, setRecentSearches] = useState<Array<{ query: string; timestamp: number }>>([]);
   const [recentlyViewed, setRecentlyViewed] = useState<CareerQuestion[]>([]);
+  const [aiEnabled, setAiEnabled] = useState(true);
 
   // Check for existing user session and load saved data on app load
   useEffect(() => {
@@ -169,6 +172,17 @@ export default function App() {
         console.error('Error loading recently viewed:', error);
       }
     }
+
+    // Load AI settings
+    const storedSettings = localStorage.getItem('skillsync_settings');
+    if (storedSettings) {
+      try {
+        const settings = JSON.parse(storedSettings);
+        setAiEnabled(settings.aiResponses !== false); // Default to true
+      } catch (error) {
+        console.error('Error loading AI settings:', error);
+      }
+    }
   }, []);
 
   // Save bookmarks to localStorage whenever they change
@@ -203,13 +217,65 @@ export default function App() {
         return [newSearch, ...filtered].slice(0, 50); // Keep last 50 searches
       });
       
-      // Simulate AI processing delay for better UX
-      setTimeout(() => {
-        const results = searchCareerQuestions(query, allQuestions);
-        setSearchResults(results);
+      try {
+        // First, search existing questions in the database
+        const existingResults = searchCareerQuestions(query, allQuestions);
+        
+        // If OpenAI is configured, enabled, and no exact matches found, generate AI response
+        if (isOpenAIConfigured() && aiEnabled && existingResults.length === 0) {
+          toast.info('🤖 Generating AI response...', {
+            description: 'SKILLSYNC AI is analyzing your question',
+            duration: 2000,
+          });
+          
+          const aiResponse = await generateCareerAdvice(query);
+          
+          // Create a new question object with AI-generated content
+          const aiGeneratedQuestion: CareerQuestion = {
+            id: Date.now(), // Unique ID based on timestamp
+            question: query,
+            answer: aiResponse.answer,
+            category: aiResponse.category,
+            isAiGenerated: true
+          };
+          
+          // Add the AI response to results
+          setSearchResults([aiGeneratedQuestion]);
+          
+          toast.success('✨ AI Response Generated!', {
+            description: 'Your personalized career advice is ready',
+            duration: 2000,
+          });
+        } else if (existingResults.length > 0) {
+          // Use existing database results
+          setSearchResults(existingResults);
+        } else {
+          // No OpenAI configured and no matches
+          setSearchResults([]);
+          toast.error('No results found', {
+            description: 'Try rephrasing your question or enable AI responses',
+            duration: 3000,
+          });
+        }
+        
         setIsSearching(false);
         setCurrentScreen('search');
-      }, 800);
+      } catch (error: any) {
+        console.error('Search error:', error);
+        setIsSearching(false);
+        
+        // Show user-friendly error message
+        const errorMessage = getErrorMessage(error);
+        toast.error('Failed to generate response', {
+          description: errorMessage,
+          duration: 4000,
+        });
+        
+        // Fallback to existing database search
+        const fallbackResults = searchCareerQuestions(query, allQuestions);
+        setSearchResults(fallbackResults);
+        setCurrentScreen('search');
+      }
     } else {
       setSearchResults(allQuestions);
       setIsSearching(false);
