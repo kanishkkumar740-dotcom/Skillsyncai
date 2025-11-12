@@ -4,6 +4,7 @@ import { Input } from "./ui/input";
 import { Card } from "./ui/card";
 import { ArrowLeft, Lock, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner@2.0.3";
+import { updateUserPassword, findUserByEmail } from "../utils/userStorage";
 
 interface ResetPasswordPageProps {
   email: string;
@@ -71,43 +72,48 @@ export function ResetPasswordPage({ email, onBack, onSuccess }: ResetPasswordPag
           return;
         }
         
-        // Update user password in localStorage (in demo, create or update user)
-        const storedUser = localStorage.getItem('skillsync_user');
-        if (storedUser) {
-          const user = JSON.parse(storedUser);
-          if (user.email.toLowerCase() === tokenEmail.toLowerCase()) {
-            // In a real app, password would be hashed
-            user.password = formData.password;
-            localStorage.setItem('skillsync_user', JSON.stringify(user));
-          }
-        } else {
-          // Create a basic user entry for demo purposes
-          const newUser = {
-            email: tokenEmail,
-            password: formData.password,
-            name: 'Career Explorer',
-            id: Date.now(),
-            joinDate: new Date().toISOString()
-          };
-          localStorage.setItem('skillsync_user', JSON.stringify(newUser));
+        // Verify user exists
+        const user = findUserByEmail(tokenEmail);
+        if (!user) {
+          setErrors({ password: 'User account not found' });
+          setIsLoading(false);
+          return;
         }
         
-        // Clear the reset token
-        localStorage.removeItem('password_reset_token');
+        // Update user password in database
+        const success = updateUserPassword(tokenEmail, formData.password);
         
-        setIsLoading(false);
-        setResetComplete(true);
-        
-        // Show success toast
-        toast.success('Password Reset Complete!', {
-          description: 'You can now sign in with your new password.',
-          duration: 3000,
-        });
-        
-        // Navigate back to login after showing success
-        setTimeout(() => {
-          onSuccess();
-        }, 2000);
+        if (success) {
+          // Update current user session if they're the same user
+          const storedUser = localStorage.getItem('skillsync_user');
+          if (storedUser) {
+            const currentUser = JSON.parse(storedUser);
+            if (currentUser.email.toLowerCase() === tokenEmail.toLowerCase()) {
+              currentUser.password = formData.password;
+              localStorage.setItem('skillsync_user', JSON.stringify(currentUser));
+            }
+          }
+          
+          // Clear the reset token
+          localStorage.removeItem('password_reset_token');
+          
+          setIsLoading(false);
+          setResetComplete(true);
+          
+          // Show success toast
+          toast.success('Password Reset Complete!', {
+            description: 'You can now sign in with your new password.',
+            duration: 3000,
+          });
+          
+          // Navigate back to login after showing success
+          setTimeout(() => {
+            onSuccess();
+          }, 2000);
+        } else {
+          setErrors({ password: 'Failed to update password. Please try again.' });
+          setIsLoading(false);
+        }
       } else {
         setErrors({ password: 'Invalid or expired reset link' });
         setIsLoading(false);

@@ -5,6 +5,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { useState } from "react";
 import { toast } from "sonner@2.0.3";
+import { findUserByEmail, updateUserPassword } from "../utils/userStorage";
 
 interface ChangePasswordPageProps {
   onBack: () => void;
@@ -32,8 +33,8 @@ export function ChangePasswordPage({ onBack }: ChangePasswordPageProps) {
       return;
     }
 
-    if (newPassword.length < 8) {
-      toast.error("Password must be at least 8 characters");
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
       return;
     }
 
@@ -41,12 +42,56 @@ export function ChangePasswordPage({ onBack }: ChangePasswordPageProps) {
 
     // Simulate API call
     setTimeout(() => {
-      setIsLoading(false);
-      toast.success("Password changed successfully!");
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setTimeout(() => onBack(), 1500);
+      // Get current user from localStorage
+      const storedUser = localStorage.getItem('skillsync_user');
+      
+      if (!storedUser) {
+        toast.error('User session not found. Please sign in again.');
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const user = JSON.parse(storedUser);
+        
+        // Verify current password
+        const dbUser = findUserByEmail(user.email);
+        
+        if (!dbUser) {
+          toast.error('User account not found');
+          setIsLoading(false);
+          return;
+        }
+        
+        if (dbUser.password !== currentPassword) {
+          toast.error('Current password is incorrect');
+          setIsLoading(false);
+          return;
+        }
+        
+        // Update password in database
+        const success = updateUserPassword(user.email, newPassword);
+        
+        if (success) {
+          // Update current session
+          user.password = newPassword;
+          localStorage.setItem('skillsync_user', JSON.stringify(user));
+          
+          setIsLoading(false);
+          toast.success("Password changed successfully!");
+          setCurrentPassword("");
+          setNewPassword("");
+          setConfirmPassword("");
+          setTimeout(() => onBack(), 1500);
+        } else {
+          toast.error('Failed to update password');
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('Error changing password:', error);
+        toast.error('An error occurred. Please try again.');
+        setIsLoading(false);
+      }
     }, 1000);
   };
 
@@ -125,7 +170,7 @@ export function ChangePasswordPage({ onBack }: ChangePasswordPageProps) {
                   {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              <p className="text-white/50 text-xs">Must be at least 8 characters</p>
+              <p className="text-white/50 text-xs">Must be at least 6 characters</p>
             </div>
 
             {/* Confirm Password */}

@@ -7,6 +7,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useState, useEffect } from "react";
 import { toast } from "sonner@2.0.3";
 import { isOpenAIConfigured } from "../utils/openai";
+import { clearAllUserData, deleteUser } from "../utils/userStorage";
 
 interface SettingsPageProps {
   onBack: () => void;
@@ -52,20 +53,41 @@ export function SettingsPage({ onBack, onSignOut, onNavigate }: SettingsPageProp
   };
 
   const handleClearData = () => {
-    // Clear all data except user credentials
-    localStorage.removeItem('skillsync_bookmarks');
-    localStorage.removeItem('skillsync_notifications');
-    localStorage.removeItem('skillsync_recent_searches');
-    localStorage.removeItem('skillsync_recently_viewed');
-    localStorage.removeItem('skillsync_settings');
-    toast.success('All data cleared successfully');
+    // Get current user
+    const storedUser = localStorage.getItem('skillsync_user');
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        clearAllUserData(user.id);
+        toast.success('All data cleared successfully');
+      } catch (error) {
+        console.error('Error clearing data:', error);
+        toast.error('Failed to clear data');
+      }
+    }
   };
 
   const handleDeleteAccount = () => {
-    // Clear everything including user
-    localStorage.clear();
-    toast.success('Account deleted successfully');
-    setTimeout(() => onSignOut(), 1500);
+    // Get current user and delete from database
+    const storedUser = localStorage.getItem('skillsync_user');
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        const deleted = deleteUser(user.id);
+        
+        if (deleted) {
+          // Clear all localStorage
+          localStorage.clear();
+          toast.success('Account deleted successfully');
+          setTimeout(() => onSignOut(), 1500);
+        } else {
+          toast.error('Failed to delete account');
+        }
+      } catch (error) {
+        console.error('Error deleting account:', error);
+        toast.error('Failed to delete account');
+      }
+    }
   };
 
   return (

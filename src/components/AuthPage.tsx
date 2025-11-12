@@ -12,6 +12,8 @@ import {
   Brain,
   Zap
 } from "lucide-react";
+import { toast } from "sonner@2.0.3";
+import { createUser, authenticateUser, findUserByEmail } from "../utils/userStorage";
 
 interface AuthPageProps {
   mode: 'login' | 'signup';
@@ -73,20 +75,69 @@ export function AuthPage({ mode, onBack, onSuccess, onModeSwitch, onForgotPasswo
     
     // Simulate API call
     setTimeout(() => {
-      const userData = {
-        name: formData.name || 'Career Explorer',
-        email: formData.email,
-        id: Date.now(),
-        joinDate: new Date().toISOString(),
-        isAuthenticated: true
-      };
-      
-      // Store user data in localStorage for persistence
-      localStorage.setItem('skillsync_user', JSON.stringify(userData));
-      
-      setIsLoading(false);
-      // Pass isNewUser as true for signup mode
-      onSuccess(userData, mode === 'signup');
+      try {
+        let userData;
+        
+        if (mode === 'signup') {
+          // Check if user already exists
+          const existingUser = findUserByEmail(formData.email);
+          if (existingUser) {
+            setErrors({ email: 'An account with this email already exists' });
+            setIsLoading(false);
+            return;
+          }
+          
+          // Create new user in the database
+          const newUser = createUser({
+            name: formData.name,
+            email: formData.email,
+            password: formData.password
+          });
+          
+          userData = {
+            ...newUser,
+            isAuthenticated: true
+          };
+          
+          toast.success('Account Created!', {
+            description: `Welcome to SkillSync AI, ${newUser.name}!`,
+            duration: 3000
+          });
+        } else {
+          // Login mode - authenticate user
+          const authenticatedUser = authenticateUser(formData.email, formData.password);
+          
+          if (!authenticatedUser) {
+            setErrors({ email: 'Invalid email or password' });
+            setIsLoading(false);
+            return;
+          }
+          
+          userData = {
+            ...authenticatedUser,
+            isAuthenticated: true
+          };
+          
+          toast.success('Welcome Back!', {
+            description: `Signed in as ${authenticatedUser.name}`,
+            duration: 3000
+          });
+        }
+        
+        // Store current user session in localStorage
+        localStorage.setItem('skillsync_user', JSON.stringify(userData));
+        
+        setIsLoading(false);
+        // Pass isNewUser as true for signup mode
+        onSuccess(userData, mode === 'signup');
+      } catch (error: any) {
+        setErrors({ email: error.message || 'An error occurred' });
+        setIsLoading(false);
+        toast.error('Error', {
+          description: error.message || 'An error occurred',
+          duration: 3000
+        });
+      }
     }, 1500);
   };
 

@@ -4,6 +4,7 @@ import { Input } from "./ui/input";
 import { Card } from "./ui/card";
 import { ArrowLeft, Mail, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner@2.0.3";
+import { findUserByEmail } from "../utils/userStorage";
 
 interface ForgotPasswordPageProps {
   onBack: () => void;
@@ -38,6 +39,15 @@ export function ForgotPasswordPage({ onBack, onResetLinkSent }: ForgotPasswordPa
 
     // Simulate API call to send reset email
     setTimeout(() => {
+      // Check if user exists in the database
+      const user = findUserByEmail(email);
+      
+      if (!user) {
+        setError('No account found with this email address');
+        setIsLoading(false);
+        return;
+      }
+      
       // Store reset token in localStorage (in real app, this would be backend)
       const resetToken = Math.random().toString(36).substring(2, 15);
       const resetData = {
