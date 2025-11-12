@@ -391,6 +391,21 @@ export function SettingsPage({ onBack, onSignOut, onNavigate }: SettingsPageProp
               <Download className="w-4 h-4 mr-2" />
               Download Credentials Log
             </Button>
+            <Button 
+              variant="ghost" 
+              onClick={() => {
+                const log = getCredentialsLog();
+                const lines = log.split('\n').filter(l => l.trim()).slice(0, 10).join('\n');
+                toast.info('Check console (F12) for full log', { 
+                  description: lines.substring(0, 100) + '...' 
+                });
+                console.log('=== CREDENTIALS LOG ===\n' + log);
+              }}
+              className="w-full justify-start text-blue-300 hover:text-blue-200 hover:bg-blue-500/10 text-sm"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              View in Console
+            </Button>
             <Separator className="bg-blue-500/20" />
             <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
               <p className="text-blue-300 text-xs">
