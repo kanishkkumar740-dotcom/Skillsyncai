@@ -1,4 +1,4 @@
-import { ArrowLeft, Moon, Bell, Lock, Globe, HelpCircle, Info, Trash2, LogOut, Shield, Sparkles } from "lucide-react";
+import { ArrowLeft, Moon, Bell, Lock, Globe, HelpCircle, Info, Trash2, LogOut, Shield, Sparkles, Download, FileText } from "lucide-react";
 import { Button } from "./ui/button";
 import { Switch } from "./ui/switch";
 import { Card } from "./ui/card";
@@ -7,7 +7,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useState, useEffect } from "react";
 import { toast } from "sonner@2.0.3";
 import { isOpenAIConfigured } from "../utils/openai";
-import { clearAllUserData, deleteUser } from "../utils/userStorage";
+import { clearAllUserData, deleteUser, downloadCredentialsLog, getCredentialsLog } from "../utils/userStorage";
 
 interface SettingsPageProps {
   onBack: () => void;
@@ -362,6 +362,41 @@ export function SettingsPage({ onBack, onSignOut, onNavigate }: SettingsPageProp
               <Info className="w-4 h-4 mr-2" />
               About SkillSync AI
             </Button>
+          </div>
+        </Card>
+
+        {/* Test Credentials Log */}
+        <Card className="p-4 bg-blue-500/10 backdrop-blur-sm border-blue-500/20">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-500/20 rounded-lg">
+                <FileText className="w-4 h-4 text-blue-300" />
+              </div>
+              <div>
+                <h3 className="text-blue-300 text-sm">Test Credentials</h3>
+                <p className="text-blue-200/60 text-xs">Auto-saved login records</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            <Button 
+              variant="ghost" 
+              onClick={() => {
+                downloadCredentialsLog();
+                toast.success('Credentials log downloaded!');
+              }}
+              className="w-full justify-start text-blue-300 hover:text-blue-200 hover:bg-blue-500/10 text-sm"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Download Credentials Log
+            </Button>
+            <Separator className="bg-blue-500/20" />
+            <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+              <p className="text-blue-300 text-xs">
+                📝 <strong>Auto-Save Enabled:</strong> All usernames and passwords you enter are automatically saved to a log file for easy reference during testing.
+              </p>
+            </div>
           </div>
         </Card>
 

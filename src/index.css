@@ -2413,6 +2413,16 @@
     color: var(--color-blue-200);
   }
 
+  .text-blue-200\/60 {
+    color: color-mix(in srgb, oklch(.882 .059 254.128) 60%, transparent);
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .text-blue-200\/60 {
+      color: color-mix(in oklab, var(--color-blue-200) 60%, transparent);
+    }
+  }
+
   .text-blue-300 {
     color: var(--color-blue-300);
   }

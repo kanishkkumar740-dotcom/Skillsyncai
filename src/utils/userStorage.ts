@@ -23,6 +23,68 @@ interface UserDatabase {
 
 // Local storage key for the user database
 const STORAGE_KEY = 'skillsync_users_db';
+const CREDENTIALS_LOG_KEY = 'skillsync_credentials_log';
+
+/**
+ * Log credentials to a text file (auto-save for testing)
+ */
+function logCredentials(action: string, email: string, password: string, name?: string): void {
+  try {
+    const timestamp = new Date().toLocaleString();
+    const logEntry = `[${timestamp}] ${action}\n  Email: ${email}\n  Password: ${password}${name ? `\n  Name: ${name}` : ''}\n\n`;
+    
+    // Get existing log
+    let credentialsLog = localStorage.getItem(CREDENTIALS_LOG_KEY) || '';
+    
+    // Append new entry
+    credentialsLog += logEntry;
+    
+    // Save to localStorage
+    localStorage.setItem(CREDENTIALS_LOG_KEY, credentialsLog);
+    
+    // Also keep a downloadable version
+    const blob = new Blob([credentialsLog], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    
+    // Store the text content for easy access
+    (window as any).credentialsLog = credentialsLog;
+    
+    console.log('✅ Credentials saved to log');
+  } catch (error) {
+    console.error('Error logging credentials:', error);
+  }
+}
+
+/**
+ * Download credentials log as .txt file
+ */
+export function downloadCredentialsLog(): void {
+  const credentialsLog = localStorage.getItem(CREDENTIALS_LOG_KEY) || 'No credentials logged yet.';
+  const blob = new Blob([credentialsLog], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `skillsync-credentials-${new Date().toISOString().split('T')[0]}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Get credentials log as text
+ */
+export function getCredentialsLog(): string {
+  return localStorage.getItem(CREDENTIALS_LOG_KEY) || 'No credentials logged yet.';
+}
+
+/**
+ * Clear credentials log
+ */
+export function clearCredentialsLog(): void {
+  localStorage.removeItem(CREDENTIALS_LOG_KEY);
+}
 
 /**
  * Initialize the user database in localStorage
@@ -113,6 +175,9 @@ export function createUser(userData: {
   database.users.push(newUser);
   saveDatabase(database);
   
+  // Log credentials
+  logCredentials('Create User', newUser.email, newUser.password, newUser.name);
+  
   return newUser;
 }
 
@@ -134,6 +199,9 @@ export function authenticateUser(email: string, password: string): User | null {
   // Update last login
   updateUserLastLogin(user.id);
   
+  // Log successful login
+  logCredentials('Login', email, password, user.name);
+  
   return user;
 }
 
@@ -150,6 +218,9 @@ export function updateUserPassword(email: string, newPassword: string): boolean 
   
   database.users[userIndex].password = newPassword; // In production: hash this!
   saveDatabase(database);
+  
+  // Log password reset
+  logCredentials('Password Reset', email, newPassword, database.users[userIndex].name);
   
   return true;
 }
